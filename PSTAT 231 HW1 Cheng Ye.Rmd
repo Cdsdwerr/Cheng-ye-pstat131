@@ -54,7 +54,9 @@ Exploratory Data Analysis
 library(ggplot2)
 data("mpg")
 head(mpg)
-hist(mpg$hwy, main="highway miles per gallon", breaks=7, xlim = range(0:50), xlab="hwy",ylab= "numbers")
+
+p <- ggplot(mpg, aes(x = hwy)) 
+p + geom_histogram()
 
 # From the dataset and graph, we could see that the majority of cars are within the 15~30 highway miles per gallon range and a few cars are within the 10~15 highway miles per gallon range as well as the 30~45 highway miles per gallon range.
 
@@ -85,7 +87,8 @@ p+ geom_bar() + coord_flip()+labs(x = "manufacturer")
 library(ggplot2)
 data("mpg")
 head(mpg)
-boxplot(hwy ~ cyl, data = mpg)
+p <- ggplot(mpg,aes(x = hwy, y = factor(cyl)))
+p + geom_boxplot() + xlab("hwy") + ylab("cyl")
 
 
 # From the dataset and graph we could see a obvious pattern: as cyl increases, hwy decreases.
