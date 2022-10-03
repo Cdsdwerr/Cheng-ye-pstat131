@@ -77,7 +77,7 @@ library(ggplot2)
 data("mpg")
 head(mpg)
 p <- ggplot(mpg,aes(x = forcats::fct_infreq(manufacturer))) 
-p+ geom_bar() + coord_flip()
+p+ geom_bar() + coord_flip()+labs(x = "manufacturer")
 ```
 
 #Exercise 4:
