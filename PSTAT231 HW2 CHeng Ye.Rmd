@@ -1,0 +1,109 @@
+---
+title: "PSTAT231 HW2 Cheng Ye"
+author: "Cheng Ye"
+date: "2022-10-13"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(tidymodels) 
+library(ggplot2)
+library(readr)
+library(workflows)
+library(dplyr) # Load required library
+```
+
+# Question 1
+```{r}
+abalone <- read.csv("C:/Cheng Ye/UCSB/PSTAT 231/HW/homework-2/homework-2/data/abalone.csv") #load required data set
+abalone$age <- abalone$ring+1.5 #define the abalone_age dataset according to the information given 
+ggplot(data=abalone)+
+  geom_histogram(mapping =  aes(x = age ), col = "white") #Plot the histogram of the dataset with updated data
+#From the graph, we know that the distribution of age is a right-skewed normal distribution
+```
+# Question 2
+```{r}
+set.seed(231)
+abalone_split<-initial_split(abalone,prop=0.80,strata=age) #Train 80%, test 20%
+abalone_train<-training(abalone_split) #Training dataset
+abalone_test<-testing(abalone_split) #Testing dataset
+
+```
+
+# Question 3
+```{r}
+abalone_train_data <-subset(abalone_train,select=-rings)
+abalone_age_recipe <- recipe(age ~ . , data = abalone_train_data) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_center(all_nominal_predictors()) %>% 
+  step_scale(all_nominal_predictors()) %>% 
+  step_interact(terms = ~ starts_with("type"):shucked_weight) %>%   
+  step_interact(terms = ~ longest_shell:diameter) %>%   
+  step_interact(terms = ~ shucked_weight:shell_weight)
+summary(abalone_age_recipe)
+#Hence from the result we could observe that we could NOT use rings to predit age as age= rings+1.5
+```
+
+# Question 4
+```{r}
+my_lm_model <- linear_reg()%>%
+  set_engine('lm')
+print(my_lm_model)
+
+```
+
+
+# Question 5
+```{r}
+wkflow <- workflow() %>%
+  add_model(my_lm_model) %>%
+  add_recipe(abalone_age_recipe)
+print(wkflow)
+```
+
+# Question 6
+```{r}
+lm_fit_model<-fit(wkflow,abalone_train_data)
+female_abalone_age <- data.frame(type="F",
+                                 longest_shell=0.50,
+                                 diameter=0.10,
+                                 height=0.30, 
+                                 whole_weight=4,
+                                 shucked_weight=1,
+                                 viscera_weight=2,
+                                 shell_weight=1)
+predict(lm_fit_model,new_data=female_abalone_age)
+
+```
+
+# Question 7
+```{r}
+library(yardstick)
+abalone_metric <- metric_set(rsq,rmse,mae)
+abalone_predict_res <- predict(lm_fit_model, new_data = abalone_train_data %>% select(-age))
+abalone_predict_res <- bind_cols(abalone_predict_res, abalone_train_data %>% select(age))
+abalone_predict_res %>% 
+  head()
+abalone_metric(abalone_predict_res, truth=age,
+                estimate=.pred)
+
+```
+# Required for 231 Students
+
+# Question 8 Which term(s) in the bias-variance tradeoff above represent the reproducible error? Which term(s) represent the irreducible error?
+
+##In the bias-variance tradeoff above, the term \(Var(\hat{f}(x_0))\) represent the repoducible error.
+##In the bias-variance tradeoff above, ther term \(Var(\epsilon)\) represent the irreducible error.
+
+
+# Question 9 Using the bias-variance tradeoff above, demonstrate that the expected test error is always at least as large as the irreducible error.
+
+##By Lecture Notes 1, Slide 72 we have that \(hat{f}(x_0)\) = \(E[Y|X = x_0]\), and then  \(E[\hat{f}(x+0)-E\hat{f}(x_0))^2]\) = \[E[\hat{f}(x_0)]-f(x_0)]^2\), hence we know that \(E[\hat{f}(x+0)-E\hat{f}(x_0))^2]\) = \[E[\hat{f}(x_0)]-f(x_0)]^2\) = 0 (Slide 70 of Lecture Notes 1). Then we could get that the reproducible error \(Var(\hat{f}(x_0))\) = \([Bias(\hat{f}(x_0))]^2\) = 0. Because that \(Var(\epsilon)\) is always greater or equal to 0 so the expected test error is always at least the same as the irreducible error. QED
+
+
+# Question 10 Prove the bias-variance tradeoff.
+
+##Knowing that \(Bias(\hat{f}(x_0))\) = \(E[\hat{f}(x_0)]-f(x_0)\), we have that \(Bias(\hat{f}(x_0))^2\) = \(E[\hat{f}(x_0)]-f(x_0)^2\). From Lecture Notes 1 Slide 70 that Y = f(X) +\(\epsilon\), then we could deduce that E(\(\epsilon\)) = 0 and \(E(f(X))=f(X)\).Hence we get that Var(\(\epsilon\)) = E(\(\epsilon^2\)). Hence the bias-variance tradeoff could be substituted in the form that \(E[(y_0-\hat{f}(x_0))^2]\) = \(E[(f(x_0)-\hat{f}(x_0))^2]\) + Var(\(\epsilon)\) = \(E[(f(x_0)-E[\hat{f}(x_0)]-(\hat{f}(x_0)-E[\hat{f}(x_0)]))^2]\) + Var(\(\epsilon\)) = \(E[(E[\hat{f}(x_0)]-f(x_0))^2]+E[(\hat{f}(x_0)-E[\hat{f}(x_0)])^2\)-(2E[f(x_0)]-E[\hat{f}(x_0)])(\hat{f}(x_0)-E[\hat{f}(x_0)]\) + Var(\(\epsilon\)) =((E[\hat{f}(x_0)]-f(x_0))^2\) + \(E[\hat{f}(x_0)-E[\hat{f}(x_0)])^2]\) - \(2(f(x_0)-E[\hat{f}(x_0)])E[\hat{f}(x_0)-E[\hat{f}(x_0)])]\)+Var([\epsilon\]) = \((E[\hat{f}(x_0)]-f(x_0))^2\) + \(E[\hat{f}(x_0)-E[\hat{f}(x_0)])^2]\) + Var(\epsilon\)) = \([Bias(\hat{f}(x_0))]^2\) + \(Var(\hat{f}(x_0))\) + Var(\(\epsilon\)). Therefore, QED [Most of the latex are learned based on http://www.evanlray.com/stat242_f2019/resources/R/MathinRmd.html]
+
+
