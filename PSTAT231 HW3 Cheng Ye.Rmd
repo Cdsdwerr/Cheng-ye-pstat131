@@ -1,0 +1,192 @@
+---
+title: "PSTAT231 HW3 Cheng Ye"
+author: "Cheng Ye"
+date: "2022-10-30"
+output: html_document
+---
+
+```{r}
+library(tidymodels)
+library(tidyverse)
+library(ggplot2)
+library(ggthemes)
+library(corrr)
+library(corrplot)
+library(discrim)
+library(poissonreg)
+library(klaR)
+library(pROC)
+tidymodels_prefer()
+#Load required packages
+```
+
+
+```{r}
+titanic <-read.csv("C:/Cheng Ye/UCSB/PSTAT 231/HW/homework-3/data/titanic.csv") %>%
+  mutate(survived = factor(survived, 
+                           levels = c("Yes", "No")),
+         pclass = factor(pclass))
+# Loading required dataset
+head(titanic) # visualize data set
+set.seed(231) # could be any number
+
+```
+
+# Question 1
+```{r}
+titanic_split <- initial_split(titanic, prop = 0.80, strata = survived) # split the data and stratified on survived,train 80%, test 20%
+titanic_train <- training(titanic_split) # training the dataset
+titanic_test <- testing(titanic_split) # testing the dataset
+dim(titanic_train)
+dim(titanic_test)
+
+# As the outcome variable is imbalanced for this dataset, using stratified sampling method for this data allows every subgroup in the population receives proper representation.
+
+
+
+```
+
+
+# Question 2
+```{r}
+ggplot(titanic_train, aes(survived))+geom_bar()
+# Using barchart to visualize the training dataset, we could see that there is slight class imbalance where one class, survived = yes, contains significantly fewer samples than the other class, survived = no. From the graph, it looks like a binomial distribution
+
+
+
+```
+
+# Question 3
+```{r}
+titanic_train %>% select(is.numeric, -c(survived, name, sex, ticket, cabin, embarked)) %>% cor(use = "complete.obs") %>% corrplot(type = "lower", diag=FALSE, bg ="green", method = "number")
+
+# From the graph, we could deduce that age and sib_sp are negatively correlated, parch and age are also negatively correlated; parch and sib_sp are postively correlated, fare and parch are postively correlated
+```
+
+# Question 4
+```{r}
+titanic_survived_recipe <- recipe(survived ~ pclass + sex + age + sib_sp + parch + fare, titanic_train) %>%
+  step_impute_linear(age) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_interact(terms = ~ starts_with('sex'):fare+age:fare)
+summary(titanic_survived_recipe)
+
+```
+
+# Question 5
+```{r}
+log_reg <- logistic_reg() %>% 
+  set_engine("glm") %>% 
+  set_mode("classification")
+log_wkflow <- workflow() %>% 
+  add_model(log_reg) %>% 
+  add_recipe(titanic_survived_recipe)
+log_fit <- fit(log_wkflow, titanic_train)
+```
+
+
+
+# Question 6
+```{r}
+lda_mod <- discrim_linear() %>% 
+  set_engine('MASS') %>% 
+  set_mode('classification')
+lda_wkflow <- workflow() %>% 
+  add_model(lda_mod) %>% 
+  add_recipe(titanic_survived_recipe)
+lda_fit <- fit(lda_wkflow, titanic_train)
+```
+
+
+
+# Question 7
+```{r}
+qda_mod <- discrim_quad() %>% 
+  set_engine('MASS') %>% 
+  set_mode('classification')
+qda_wkflow <- workflow() %>% 
+  add_model(qda_mod) %>% 
+  add_recipe(titanic_survived_recipe)
+qda_fit <- fit(qda_wkflow, titanic_train)
+```
+
+# Question 8
+```{r}
+nb_mod <- naive_Bayes() %>% 
+  set_mode("classification") %>% 
+  set_engine("klaR") %>% 
+  set_args(usekernel = FALSE) 
+nb_wkflow <- workflow() %>% 
+  add_model(nb_mod) %>% 
+  add_recipe(titanic_survived_recipe)
+nb_fit <- fit(nb_wkflow, titanic_train)
+
+```
+
+# Question 9
+```{r}
+log_acc <- predict(log_fit, new_data = titanic_train, type = "class") %>% 
+  bind_cols(titanic_train %>% select(survived)) %>% 
+  accuracy(truth = survived, estimate = .pred_class)
+lda_acc <- predict(lda_fit, new_data = titanic_train, type = "class") %>% 
+  bind_cols(titanic_train %>% select(survived)) %>% 
+  accuracy(truth = survived, estimate = .pred_class)
+qda_acc <- predict(qda_fit, new_data = titanic_train, type = "class") %>% 
+  bind_cols(titanic_train %>% select(survived)) %>% 
+  accuracy(truth = survived, estimate = .pred_class)
+nb_acc <- predict(nb_fit, new_data = titanic_train, type = "class")%>% 
+  bind_cols(titanic_train %>% select(survived)) %>% 
+  accuracy(truth = survived, estimate = .pred_class)
+
+results <- bind_rows(log_acc, lda_acc, qda_acc, nb_acc) %>%
+  tibble() %>%mutate(model = c("Logistic Regression","Linear Discriminant Aanalysis", "Quadratic Discriminant Analysis","Naive Bayes")) %>%
+  select(model, .estimate) 
+results
+
+#From observing the results, the Logistic Regression method performed the best on the training data
+
+
+```
+
+# Question 10
+```{r}
+log_test <- fit(log_wkflow, titanic_test)
+predict(log_test, new_data = titanic_test, type = "class") %>%
+  bind_cols(titanic_test %>% select(survived)) %>%
+  accuracy(truth = survived, estimate = .pred_class)
+augment(log_test, new_data = titanic_test) %>%
+  conf_mat(truth = survived, estimate = .pred_class) %>%
+  autoplot(type = "heatmap")
+augment(log_test, new_data = titanic_test) %>%
+  roc_curve(survived, .pred_Yes) %>%
+  autoplot()
+
+#The model has accuracy 0.8268156, which is close to 1, hence the model performed pretty well, its accuracy slightly increased on the testing data, this specifies that the model fitting is well. The cause of such results might be the model being mechanistic thus having lower variance.
+
+```
+
+# Question 11
+```{r}
+# Denote P(z) = y
+# Then y+y*e**(z)=e**z %>% y=e**z - y*e**z %>% y = (1-y)*e**z
+# Then e**z =y/(1-y) %>% log(e**z)=log(y/(1-y))
+# Then z = log(y/(1-y)) %>% z(p) = log(p/(1-p))
+# Q.E.D.
+
+```
+
+# Question 12
+```{r}
+#If we increase X_1 by 2, the odds of outcome would increase by e**(2*beta_1) times.
+#If beta_1  is negative, as X_1 approaches infinity, p/1-p approaches 0, as X_1 approaches negative infinity , p/1-p approaches 1
+
+```
+
+
+
+
+
+
+
+
+
