@@ -1,0 +1,140 @@
+---
+title: "PSTAT231 HW5 Cheng Ye"
+author: "Cheng Ye"
+date: "2022-11-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(tidymodels)
+library(ggplot2)
+library(corrplot)
+library(ggthemes)
+library(janitor)
+library(ISLR)
+library(ISLR2)
+library(compiler)
+tidymodels_prefer()
+#Loading Required Packages
+
+```
+#Question 1
+```{r}
+Pokemon_origin <- read.csv("C:/Cheng Ye/UCSB/PSTAT 231/HW/homework-5/homework-5/data/pokemon.csv")
+#Pokemon_origin
+Pokemon <- clean_names(Pokemon_origin)
+#Pokemon
+
+## From the description. By using clean_names(), the resulting column names are change to a format that only consist of the underscore, numbers, and letters. It is useful as in it makes calling variables easier and gets rid of unreadable characters.
+
+
+```
+
+#Question 2
+```{r}
+Pokemon_plot <- ggplot(data=Pokemon, aes(x=type_1)) +
+     geom_bar(stat = "count")
+Pokemon_plot
+Pokemon <- Pokemon[Pokemon$type_1 %in% c('Bug', 'Fire', 'Grass', 'Normal', 'Water', 'Psychic'), ]
+Pokemon$type_1 = factor(Pokemon$type_1)
+Pokemon$legendary = factor(Pokemon$legendary)
+Pokemon$generation = factor(Pokemon$generation) 
+
+##There are 18 classes of outcome. There are very few pokemons belonging to the flying type.
+
+
+```
+#Question 3
+```{r}
+set.seed(231)
+Pokemon_split<-initial_split(Pokemon,strata = type_1,prop = 0.8)
+
+Pokemon_train<-training(Pokemon_split)
+Pokemon_test<-testing(Pokemon_split)
+dim(Pokemon_train)
+dim(Pokemon_test)
+#From the results we could observe that the training and testing data sets have desired number of observations
+
+#K-fold Cross Validation
+Pokemon_folds<-vfold_cv(Pokemon_train, v = 5, strata = type_1)
+#Stratifying the folds could be useful because it keeps the distribution, aka the proportion of variable types in each fold to be the same so that it is easier for us to analyze and avoid overfitting.
+```
+
+#Question 4
+```{r}
+Pokemon_recipe <- 
+  recipe(formula = type_1 ~ legendary + generation + sp_atk + attack + speed + defense + hp + sp_def, data = Pokemon_train) %>% 
+  step_dummy(c('legendary', 'generation')) %>%
+  step_normalize(all_predictors())
+Pokemon_recipe %>% 
+  prep() %>% 
+  juice()
+
+```
+#Question 5
+```{r}
+Mul_reg <- multinom_reg(penalty = tune(),mixture = tune()) %>% 
+  set_engine("glmnet")
+
+Pokemon_wkflow <- workflow() %>% 
+  add_recipe(Pokemon_recipe) %>% 
+  add_model(Mul_reg)
+
+Pokemon_grid <- grid_regular(penalty(range = c(-5, 5)),mixture(range=c(0,1)), levels = 10)
+#Because the grid has 10 level penalty and 10 level mixture, and we set 5 folds, so there are 500 models to be fitted in total
+```
+
+#Question 6
+```{r}
+Pokemon_tune <- tune_grid(object = Pokemon_wkflow,
+  resamples = Pokemon_folds, 
+  grid = Pokemon_grid
+)
+autoplot(Pokemon_tune)
+#From the results we could observe that the higher the penalty, the lower the accuracy. Larger/Smaller value of regularization determines ROC_AUC and accuracy
+```
+#Question 7
+```{r}
+best_penalty <- select_best(Pokemon_tune, metric = "roc_auc")
+final_flow <- finalize_workflow(Pokemon_wkflow, best_penalty)
+final_fit <- fit(final_flow, data = Pokemon_train)
+aug_fit <- augment(final_fit, new_data = Pokemon_test)
+aug_fit
+```
+#Question 8
+```{r}
+aug_fit <- augment(final_fit, new_data = Pokemon_test, type = "prob") %>% 
+  mutate(type_1 = as.factor(type_1)) 
+Pokemon_roc <- roc_auc(aug_fit, truth = type_1 ,estimate = .pred_Bug:.pred_Water)
+Pokemon_roc
+roc_curve(aug_fit, truth = type_1, estimate=.pred_Bug:.pred_Water) %>%
+  autoplot() 
+aug_fit %>% 
+  conf_mat(truth= type_1, estimate=.pred_class) %>% 
+  autoplot(type="heatmap")
+#From the results, we could observe that the model performs poorly in predicting grass and fire types. From the heat map, the model doesn't perform well besides predicting the normal type. I think the independent variables have little correlations to the response variable so that we cannot come up with a logical prediction between them.
+
+
+```
+#Question 9
+```{r warning = FALSE}
+library(boot)
+Curry_shot <- c(rep(1,337),rep(0,464))
+Curry_shot_mean <- function(original_vector, resample_vector) {
+    mean(original_vector[resample_vector])
+}
+Curry_shots <- boot(Curry_shot,Curry_shot_mean,R=1000)
+Shoot<-Curry_shots$t
+Nine_CI <- boot.ci(Curry_shots,conf = 0.99)
+hist(Shoot,freq = F)
+lines(density(Shoot), col="red")
+Nine_CI$normal
+```
+
+
+
+
+
+
+
