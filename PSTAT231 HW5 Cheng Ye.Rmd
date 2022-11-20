@@ -130,7 +130,7 @@ Nine_CI <- boot.ci(Curry_shots,conf = 0.99)
 hist(Shoot,freq = F)
 lines(density(Shoot), col="red")
 Nine_CI$normal
-#From the results, we could observe that the 99%CI for boostrap is (0.3740969,0.4650527)
+#From the results, we could observe that the 99%CI for boostrap is (0.3740969,0.4666422)
 ```
 
 
