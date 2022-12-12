@@ -20,6 +20,11 @@ output:
   In this project, we hypothesize that life expectancy is correlated with the development status of the given country
   This project is divided into the following sections:An abstract part concluding the origins, processes, and results of the research; a introduction part that explains the project with more details; an Exploratory Data Analysis section where we explain the usage of variables; a model building section where we set up the base components of our model; a model comparison section where we ascertain the best performing model; a conclusion part that discusses the outcomes of the models we used in this research and comments regarding the research.
 
+### Source of Data
+  The data-set related to life expectancy, health factors for 193 countries has been collected from the same WHO data repository website and its corresponding economic data was collected from United Nation website.Apart from deriving directly from the WHO data source, the integrated data also includes other social/mortality factors.  
+  The dataset comes from World Health Organization,available at https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-life-expectancy-and-healthy-life-expectancy
+  The integrated data sources came from Non-profit Website Kaggle, available at https://www.kaggle.com/datasets/kumarajarshi/life-expectancy-who
+
 ### Loading necessary packages
 ```{r include=FALSE}
 library(janitor)# for cleaning out our data
