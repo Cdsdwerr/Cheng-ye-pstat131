@@ -579,3 +579,5 @@ In the world of statistics, any rsq greater than 0.7 is considered to be great i
 
 ## Acknowledgements
   This project could not be completed without the help of Professor Coburn, the help from TAs, and the help from various lab notes. We sincerely thank you for your time and patience.
+  *The original dataset came from World Health Organization, available at https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-life-expectancy-and-healthy-life-expectancy
+  *The Integrated dataset came from Non-profit Website Kaggle, available at https://www.kaggle.com/datasets/kumarajarshi/life-expectancy-who
