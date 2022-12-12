@@ -21,4 +21,6 @@
 21.Income.composition.of.resources: A number between 0~1
 22.Schooling: A number betwene 0~1
 
+ *The original dataset came from World Health Organization, available at https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-life-expectancy-and-healthy-life-expectancy
+ *The Integrated dataset came from Non-profit Website Kaggle, available at https://www.kaggle.com/datasets/kumarajarshi/life-expectancy-who
 
