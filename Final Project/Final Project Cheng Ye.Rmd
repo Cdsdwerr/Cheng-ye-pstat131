@@ -401,6 +401,7 @@ life_folds <- vfold_cv(Life_Train, v=10, strata = Status)
 ### Running the Models
   In this part, we will be using 4 different models: Ridge Regression model, Lasso Regression model, Decision Tree model, and Boosted Tree model. Before the modelling begins, we predict Decision Tree model would perform the best,as decision trees have advantages in interpretation, less Data Preparation, is non-Parametric, and versatile.
 #### Ridge Regression Model
+  As for the first model, we decided to go with Ridge regression as ridge regression model is capable of reducing standard error by adding bias in the regression process. Again it is a trade-off between vairance and bias.
 ```{r}
 rg_reg <- linear_reg(penalty = tune(), mixture = 0) %>%
   set_mode("regression") %>%
@@ -442,6 +443,7 @@ rsq_acc
  From the results, we could observe the maximum rmse is 0.8485144		
 
 #### Lasso Regression Model
+  we decided to choose lasso regression due to the fact that lasso regression allows us to minimize coefficient of variables to prevent overfitting. As our original data contains varaibles that overlap, it will inevitably cause overlap
 ```{r}
 ls_reg <- linear_reg(penalty = tune(),mixture = 1) %>% 
   set_mode("regression") %>%
@@ -477,6 +479,7 @@ ls_acc
 
 
 #### Decision Tree Model
+For the third model presented in the project, we decided to use Decision tree model as it is capable of dissolving complex data into more concrete parts.
 ```{r}
 tree_spec <- decision_tree()%>%
   set_engine("rpart")
@@ -515,6 +518,7 @@ decision_tree_acc
 ```
 Hence the rsq of decision tree is 0.932291
 #### Boosted Tree Model
+  For the fourth model presented in the project, we used Boosted Tree Model. The advantage of using this model is that within each iteration, the weak rules from each individual classifier are combined to form one, strong prediction rule. However, boosted model is not perfect, no statistical method is. However, the major downside to this model is that it could over-fit the data when the trees are too deep with noisy data. Again, a trade-off.
 ```{r}
 boost_spec <- boost_tree() %>%
   set_engine("xgboost") %>%
