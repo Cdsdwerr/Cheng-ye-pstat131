@@ -1,24 +1,24 @@
-1. Country
-2. Year
-3. Status
-4. Life.expectancy
-5. Adult.Mortality
-6.infant.deaths
-7.Alcohol
-8.percentage.expenditure
-9.Hepatitis.B
-10.Measles
-11.BMI
-12.under.five.deaths
-13.Polio
-14.Total.expenditure
-15.Diphtheria
-16.HIV.AIDS
-17. GDP
-18. Population
-19. thinness..1.19.years
-20.thinness.5.9.years
-21.Income.composition.of.resources
-22.Schooling
+1. Country: Name of Country
+2. Year: 2000~2015
+3. Status: Devloped or Developing
+4. Life.expectancy: a number between 0~100
+5. Adult.Mortality: a number between 0~1000
+6.infant.deaths: a number between 0~1000
+7.Alcohol: a number between 0~1000
+8.percentage.expenditure: a number between 0~199
+9.Hepatitis.B: a number between 0~100
+10.Measles: A number between 0~
+11.BMI: A number between 0~ 100
+12.under.five.deaths: A number between 0~100
+13.Polio: A number between 0~100
+14.Total.expenditure: A number between 0~100
+15.Diphtheria: A number between 0~100
+16.HIV.AIDS: A number between 0~100
+17. GDP: A really large number
+18. Population: A really large number
+19. thinness..1.19.years: A number between 0~1000000
+20.thinness.5.9.years: A number between 0~1000000
+21.Income.composition.of.resources: A number between 0~1
+22.Schooling: A number betwene 0~1
 
 
